@@ -47,6 +47,14 @@ import * as fw_ps4_852 from "./lapse/ps4/852.mjs";
 import * as fw_ps4_900 from "./lapse/ps4/900.mjs";
 import * as fw_ps4_903 from "./lapse/ps4/903.mjs";
 import * as fw_ps4_950 from "./lapse/ps4/950.mjs";
+import * as fw_ps4_1000 from "./lapse/ps4/1000.mjs";
+import * as fw_ps4_1050 from "./lapse/ps4/1050.mjs";
+import * as fw_ps4_1100 from "./lapse/ps4/1100.mjs";
+import * as fw_ps4_1102 from "./lapse/ps4/1102.mjs";
+import * as fw_ps4_1150 from "./lapse/ps4/1150.mjs";
+import * as fw_ps4_1200 from "./lapse/ps4/1200.mjs";
+import * as fw_ps4_1250 from "./lapse/ps4/1250.mjs";
+import * as fw_ps4_1300 from "./lapse/ps4/1300.mjs";
 
 const t1 = performance.now();
 
@@ -57,7 +65,7 @@ const [is_ps4, version] = (() => {
   const version = value & 0xffff;
   const [lower, upper] = (() => {
     if (is_ps4) {
-      return [0x100, 0x1250];
+      return [0x100, 0x1302];
     } else {
       return [0x100, 0x1020];
     }
@@ -102,6 +110,30 @@ const fw_config = (() => {
     } else if (0x950 <= version && version < 0x1000) {
       // 9.50, 9.51, 9.60
       return fw_ps4_950;
+    } else if (0x1000 <= version && version < 0x1050) {
+      // 10.00, 10.01
+      return fw_ps4_1000;
+    } else if (0x1050 <= version && version < 0x1100) {
+      // 10.50, 10.70, 10.71
+      return fw_ps4_1050;
+    } else if (version === 0x1100) {
+      // 11.00
+      return fw_ps4_1100;
+    } else if (version === 0x1102) {
+      // 11.02
+      return fw_ps4_1102;
+    } else if (0x1150 <= version && version < 0x1200) {
+      // 11.50, 11.52
+      return fw_ps4_1150;
+    } else if (0x1200 <= version && version < 0x1250) {
+      // 12.00, 12.02
+      return fw_ps4_1200;
+    } else if (0x1250 <= version && version < 0x1300) {
+      // 12.50, 12.52
+      return fw_ps4_1250;
+    } else if (0x1300 <= version && version < 0x1302) {
+      // 13.00
+      return fw_ps4_1300;
     }
   } else {
     // TODO: PS5
@@ -1547,8 +1579,8 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   if (!is_ps4) {
     throw RangeError("ps5 kernel patching unsupported");
   }
-  if (!(0x700 <= version && version < 0x1000)) {
-    // Only 7.00-9.60 supported
+  if (!(0x700 <= version && version < 0x1302)) {
+    // Only 7.00-13.00 supported
     throw RangeError("kernel patching unsupported");
   }
 
@@ -1576,7 +1608,7 @@ async function patch_kernel(kbase, kmem, p_ucred, restore_info) {
   // cr_sceCaps[1] // 0x800000000000ff00
   kmem.write64(p_ucred.add(0x68), -1); // 0xffffffffffffffff
 
-  const buf = await get_binary(patch_elf_loc);
+  const buf = fw_config.shellcode.buffer;
   const patches = new View1(buf);
   let map_size = patches.size;
   const max_size = 0x10000000;
@@ -1921,23 +1953,23 @@ function runBinLoader() {
 
 kexploit().then((success) => {
   if (success) {
- fetch('./goldhen.bin').then(res => res.arrayBuffer()).then(arr => {
-   
-    const originalLength = arr.byteLength;
-    const paddingLength = (4 - (originalLength % 4)) % 4;
-    const paddedBuffer = new Uint8Array(originalLength + paddingLength);
-    paddedBuffer.set(new Uint8Array(arr), 0);
-    if (paddingLength) paddedBuffer.set(new Uint8Array(paddingLength), originalLength);
-    const shellcode = new Uint32Array(paddedBuffer.buffer);
-    const payload_buffer = chain.sysp('mmap', 0, paddedBuffer.length, PROT_READ | PROT_WRITE | PROT_EXEC, 0x41000, -1, 0);
-    const native_view = array_from_address(payload_buffer, shellcode.length);
-    native_view.set(shellcode);
-    chain.sys('mprotect', payload_buffer, paddedBuffer.length, PROT_READ | PROT_WRITE | PROT_EXEC);
-    const ctx = new Buffer(0x10);
-    const pthread = new Pointer();
-    pthread.ctx = ctx;
+    fetch('./goldhen.bin').then(res => res.arrayBuffer()).then(arr => {
 
-    call_nze('pthread_create', pthread.addr, 0, payload_buffer, 0);
-});
+      const originalLength = arr.byteLength;
+      const paddingLength = (4 - (originalLength % 4)) % 4;
+      const paddedBuffer = new Uint8Array(originalLength + paddingLength);
+      paddedBuffer.set(new Uint8Array(arr), 0);
+      if (paddingLength) paddedBuffer.set(new Uint8Array(paddingLength), originalLength);
+      const shellcode = new Uint32Array(paddedBuffer.buffer);
+      const payload_buffer = chain.sysp('mmap', 0, paddedBuffer.length, PROT_READ | PROT_WRITE | PROT_EXEC, 0x41000, -1, 0);
+      const native_view = array_from_address(payload_buffer, shellcode.length);
+      native_view.set(shellcode);
+      chain.sys('mprotect', payload_buffer, paddedBuffer.length, PROT_READ | PROT_WRITE | PROT_EXEC);
+      const ctx = new Buffer(0x10);
+      const pthread = new Pointer();
+      pthread.ctx = ctx;
+
+      call_nze('pthread_create', pthread.addr, 0, payload_buffer, 0);
+    });
   }
 });

