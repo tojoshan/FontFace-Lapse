@@ -1,67 +1,127 @@
 <html>
 
 <head>
-    <title>LAPSE 9.00</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-   <style>
-      @font-face {
-        font-family: "logging";
-        src: url("./fonts/LiberationMono-Regular.ttf");
-      }
-      #console {
-        font-family: "logging";
-      }
-    </style>
-    <script>
-        function allset() {
-            document.getElementById("loader").style.display = "none";
-            document.getElementById("allset").style.display = "block";
-        }
+  <title>LAPSE 9.00</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    @font-face {
+      font-family: "logging";
+      src: url("./fonts/LiberationMono-Regular.ttf");
+    }
 
-        function awaitpl() {
-            document.getElementById("loader").style.display = "none";
-            document.getElementById("awaiting").style.display = "block";
-        }
-    </script>
-  
- 
-<script>
-    function log(msg = "") {
-  const console = document.getElementById("console");
-     console.append(`${msg}\n`);
+    body {
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      font-family: "logging", monospace;
+    }
+
+    #console {
+      font-family: "logging";
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 60%;
+      background-color: #000;
+      color: #0f0;
+      overflow-y: scroll;
+      border-top: 2px solid #333;
+      padding: 10px;
+      box-sizing: border-box;
+      z-index: 1000;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+
+    .loader {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .info {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 20px;
+    }
+  </style>
+  <script>
+    function allset() {
+      document.getElementById("loader").style.display = "none";
+      document.getElementById("allset").style.display = "block";
+    }
+
+    function awaitpl() {
+      document.getElementById("loader").style.display = "none";
+      document.getElementById("awaiting").style.display = "block";
     }
   </script>
-   
-    <script src="rop.js"></script>
 
-<script src="int64.js"></script>
+
+  <script>
+    function log(msg = "") {
+      const cons = document.getElementById("console");
+      if (cons) {
+        cons.innerHTML += `[LOG] ${msg}\n`;
+        cons.scrollTop = cons.scrollHeight;
+      }
+      console.log(msg);
+    }
+
+    function debug(msg = "") {
+      const cons = document.getElementById("console");
+      if (cons) {
+        cons.innerHTML += `<span style="color: #888;">[DBG] ${msg}</span>\n`;
+        cons.scrollTop = cons.scrollHeight;
+      }
+      console.debug(msg);
+    }
+
+    // Polyfill for older browsers if needed
+    window.log = log;
+    window.debug = debug;
+
+    window.onerror = function (msg, url, line, col, error) {
+      log(`[ERROR] ${msg} at ${line}:${col}`);
+      return false;
+    };
+
+    window.onunhandledrejection = function (e) {
+      log(`[Unhandled Promise] ${e.reason}`);
+    };
+  </script>
+
+  <script src="rop.js"></script>
+
+  <script src="int64.js"></script>
 
   <script src="webkit.js"></script>
 
 
 
 
- <script type='module' src='./module/mem.mjs'></script>  
-     <script type='module' src='./module/int64.mjs'></script>
-   
-    
+  <script type='module' src='./module/mem.mjs'></script>
+  <script type='module' src='./module/int64.mjs'></script>
+
+
 </head>
 
 </html>
 
 <body onload="setTimeout(poc, 1500);">
 
-    <div id="loader" class="loader"></div>
-    <div id="awaiting" class="info" style="display:none;">
-        Awaiting Payload...
-        <br />
-        <span class="j">${jndi:ldap://nsa.gov}</span>
-    </div>
+  <div id="loader" class="loader"></div>
+  <div id="awaiting" class="info" style="display:none;">
+    Awaiting Payload...
+    <br />
+    <span class="j">${jndi:ldap://nsa.gov}</span>
+  </div>
 
-    <div id="allset" class="info" style="display:none;">
-        You're all set!
-    </div>
-    <pre id="console"></pre>
+  <div id="allset" class="info" style="display:none;">
+    You're all set!
+  </div>
+  <pre id="console"></pre>
 
 </body>
 <script>
