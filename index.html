@@ -90,27 +90,23 @@
     window.onunhandledrejection = function (e) {
       log(`[Unhandled Promise] ${e.reason}`);
     };
+
+    // Initial check
+    window.addEventListener('DOMContentLoaded', () => {
+      log("Console initialized. Waiting for exploit start...");
+    });
   </script>
 
   <script src="rop.js"></script>
-
   <script src="int64.js"></script>
-
   <script src="webkit.js"></script>
-
-
-
 
   <script type='module' src='./module/mem.mjs'></script>
   <script type='module' src='./module/int64.mjs'></script>
 
-
 </head>
 
-</html>
-
 <body onload="setTimeout(poc, 1500);">
-
   <div id="loader" class="loader"></div>
   <div id="awaiting" class="info" style="display:none;">
     Awaiting Payload...
@@ -122,8 +118,9 @@
     You're all set!
   </div>
   <pre id="console"></pre>
-
 </body>
+
+</html>
 <script>
 
 </script>
