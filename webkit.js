@@ -1,4 +1,7 @@
+console.log("webkit.js loading...");
+if (window.log) log("webkit.js loading...");
 var PAGE_SIZE = 16384;
+
 var SIZEOF_CSS_FONT_FACE = 0xb8;
 var HASHMAP_BUCKET = 208;
 var STRING_OFFSET = 20;
