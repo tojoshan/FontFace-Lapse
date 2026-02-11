@@ -10,6 +10,18 @@ var HAMMER_FONT_NAME = "font8"; //must take bucket 3 of 8 (counting from zero)
 var HAMMER_NSTRINGS = 700; //tweak this if crashing during hammer time
 
 function poc() {
+    // Compatibility Check
+    const ua = navigator.userAgent;
+    const isPS4 = ua.includes("PlayStation 4");
+    const isPS5 = ua.includes("PlayStation 5");
+
+    if (!isPS4 && !isPS5) {
+        const msg = "System not supported. This exploit is for PlayStation 4/5 only.";
+        if (window.log) log(msg);
+        alert(msg);
+        return;
+    }
+
     addEventListener('error', event => {
         const reason = event.error;
         alert(

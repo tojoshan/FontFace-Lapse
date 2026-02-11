@@ -81,4 +81,10 @@ function get_target_from_ua(useragent) {
 }
 
 export let target = null;
-set_target(get_target_from_ua(navigator.userAgent));
+try {
+  const ua = navigator.userAgent;
+  const t = get_target_from_ua(ua);
+  if (t !== undefined) set_target(t);
+} catch (e) {
+  console.warn("Failed to set target from UA:", e);
+}
